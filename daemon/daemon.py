@@ -1,14 +1,12 @@
 # %% import external dependencies
 from glob import glob
-from stat import S_IEXEC
-from os import remove, chmod, stat
-from os.path import join, basename, splitext, exists, getmtime
+from os import remove
+from os.path import basename, exists, getmtime, dirname
 from typing import List, Set, Mapping
 from time import sleep
 from datetime import datetime, timedelta
 from threading import Thread, active_count
 from itertools import groupby
-from functools import partial
 from subprocess import call
 from textwrap import dedent
 from tempfile import NamedTemporaryFile
@@ -22,16 +20,15 @@ __all__ = ['run']
 
 
 # %% parameters
-maxworkers = 3
+maxworkers = 64
 startinterval = 30
-mountpoint = '/home/uedalab/Desktop'
 
 
 def workingfile(key: str) -> str:
     """
     Working dir where a preanalyzing process works.
     """
-    return f'{mountpoint}/flatten_root_files/{key}.root'
+    return f'/path/to/{key}.parquet'
 
 
 def keypatt(filename: str) -> str:
@@ -47,12 +44,11 @@ def keypatt(filename: str) -> str:
     then, these two files 'aq001__0000.lma' and 'aq001__0001.lma' have the same key 'aq001'; they will be preanalyzed
     as the same lma group.
     """
-    key, _ = splitext(basename(filename))
-    return key
+    return basename(dirname(filename))
 
 
 def targetlist() -> List[str]:
-    return glob(f'{mountpoint}/parquet_files/*.parquet')
+    return glob('/path/to/SortEvent_*.root')
 
 
 # %%
@@ -95,29 +91,25 @@ def work(key: str) -> None:
     locker = f'{out}.locked'
     print(f"[{datetime.now()}] Working on key '{key}'...")
     with open(locker, 'w'):
-        with path(rsc, 'exportas.py') as exe:
+        with path(rsc, 'merge.py') as exe:
             with NamedTemporaryFile('w', delete=False) as f:
                 f.write(dedent("""\
                     #!/bin/bash
-                    docker run \
-                        --rm \
-                        -w /app/ \
-                        -v {exe}:/app/exe:ro \
-                        -v {mountpoint}:{mountpoint}:rw \
-                        daehyunpy/sp8-delayline \
-                        /app/exe \
+                    #PBS -N merge_{key}
+                    #PBS -l nodes=1:ppn=14
+                    #PBS -q serial
+                    pipenv shell {exe} \
                         {targets} \
                         -o {out}
                     """).format(
+                        key=key,
                         exe=quote(exe),
-                        mountpoint=quote(mountpoint),
                         targets=' '.join(quote(f) for f in targetlist() if keypatt(f)==key),
                         out=quote(out),
                     )
                 )
                 fn = f.name
-            chmod(fn, stat(fn).st_mode|S_IEXEC)
-            call(fn)
+            call(["qsub", fn], cwd="/home/daehyun/sacla-merge-scripts")
     remove(fn)
     remove(locker)
 
