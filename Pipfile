@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+numpy = "*"
+olpy = {path = "/home/software/SACLA_tool/OnlineUserAPI/latest/python"}
+udbpy = {path = "/home/software/SACLA_tool/UserDatabaseAPI/latest/python"}
+dbpy = {path = "/home/software/SACLA_tool/DataAccessUserAPI/latest/python"}
+
+[dev-packages]
+
+[requires]
+python_version = "3.6"
