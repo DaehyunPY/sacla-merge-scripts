@@ -4,10 +4,21 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+importlib-resources = "*"
+docker = "*"
+pandas = "*"
+cytoolz = "*"
+cython = "*"
+tqdm = "*"
+"h5py" = "*"
+dask = {version = "*", extras = ["complete"]}
+matplotlib = "*"
+numba = "*"
 numpy = "*"
 olpy = {path = "/home/software/SACLA_tool/OnlineUserAPI/latest/python"}
 udbpy = {path = "/home/software/SACLA_tool/UserDatabaseAPI/latest/python"}
 dbpy = {path = "/home/software/SACLA_tool/DataAccessUserAPI/latest/python"}
+saclatools = {git = "https://github.com/DaehyunPY/sacla-delayline.git"}
 
 [dev-packages]
 
