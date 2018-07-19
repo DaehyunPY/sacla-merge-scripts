@@ -20,6 +20,7 @@ udbpy = {path = "/home/software/SACLA_tool/UserDatabaseAPI/latest/python"}
 dbpy = {path = "/home/software/SACLA_tool/DataAccessUserAPI/latest/python"}
 saclatools = {git = "https://github.com/DaehyunPY/sacla-delayline.git"}
 ipython = "*"
+pyspark = "*"
 
 [dev-packages]
 
