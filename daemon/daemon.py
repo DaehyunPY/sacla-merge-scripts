@@ -1,20 +1,19 @@
 # %% import external dependencies
-from glob import glob
-from os import remove
-from os.path import basename, exists, getmtime, dirname
-from typing import List, Set, Mapping
-from time import sleep
 from datetime import datetime, timedelta
-from threading import Thread, active_count
+from glob import glob
 from itertools import groupby
 from subprocess import call
 from textwrap import dedent
-from tempfile import NamedTemporaryFile
+from threading import Thread, active_count
+from time import sleep
+from typing import List, Set, Mapping
 
 from importlib_resources import path
+from os import remove
+from os.path import basename, exists, getmtime, dirname
+from tempfile import NamedTemporaryFile
 
 from . import rsc
-
 
 __all__ = ['run']
 
@@ -28,7 +27,7 @@ def workingfile(key: str) -> str:
     """
     Working dir where a preanalyzing process works.
     """
-    return f'/path/to/{key}.parquet'
+    return f'/work/uedalab/2018A8038Ueda/merged_files/{key}.parquet'
 
 
 def keypatt(filename: str) -> str:
@@ -48,7 +47,7 @@ def keypatt(filename: str) -> str:
 
 
 def targetlist() -> List[str]:
-    return glob('/path/to/SortEvent_*.root')
+    return glob('/work/uedalab/2018A8038Ueda/hit_files/*/SortEvent_*.root')
 
 
 # %%
