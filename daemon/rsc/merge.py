@@ -1,16 +1,11 @@
 #!/usr/bin/env python3
 # %% external dependencies
-from glob import iglob
-from os.path import splitext, basename, getmtime, getctime
 from argparse import ArgumentParser
 
-from tqdm import tqdm
-from numpy import stack
-from h5py import File
-from pyspark.sql import SparkSession
-
-from saclatools import scalars_at, LmaReader
-
+from functools import reduce
+from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql.functions import udf, col
+from saclatools import scalars_at, SpkHits
 
 # %% parser & parameters
 parser = ArgumentParser(prog='merge', description="Merge resorted root files and SACLA meta data.")
@@ -22,8 +17,6 @@ args = parser.parse_args()
 targets = args.rootfiles
 saveas = args.output
 
-lma_filename = "/UserData/uedalab/work.uedalab/2017B8050/lma_files/{}.lma".format
-hdf_filename = "/work/uedalab/2017B8050/hdf_files/{}.h5".format
 hightag = 201704
 equips = {  # must be correct for metadata retrieval
     'fel_status': ('xfel_mon_ct_bl1_dump_1_beamstatus/summary', bool),
@@ -42,33 +35,44 @@ builder = (SparkSession
            # .config("spark.executor.cores", 5)
            # .config("spark.executor.memory", "4g")
            )
+spark = builder.getOrCreate()
+
+
+# %%
+@udf(SpkHits)
+def combine_hits(xarr, yarr, tarr, flagarr):
+    return [{'x': x,
+             'y': y,
+             't': t,
+             'flag': f
+             } for x, y, t, f in zip(xarr, yarr, tarr, flagarr)]
+
+
+chits = col('SortedEvent.fDetektors')[0]['fDetektors_fHits']
 
 
 # %% to parquet
 with builder.getOrCreate() as spark:
-    print("Reading lma file...")
-    with LmaReader(ifile) as r:
-        keys = tuple("channel{}".format(i) for i in r.channels)
-        data: "List[dict]" = tuple(d for d in r)
-
-    print("Getting SACLA metadata...")
-    tags = (d['tag'] for d in data)
-    meta = scalars_at(*tags, hightag=hightag, equips=equips)  # get SACLA meta data
-
-    print("Writing hdf file...")
-    with File(ofile) as f:
-        f['tags'] = meta.index.values
-        for k in keys:
-            if k in {'channel7'}:
-                continue
-            f[k] = stack(tuple(d[k] for d in data)).astype('float32')
-        for k in meta:
-            f[k] = meta[k]
-    print("Done!")
-
-    lmas = {splitext(basename(fn))[0]: getmtime(fn) for fn in iglob(lma_filename("*"))}
-    hdfs = {splitext(basename(fn))[0]: getctime(fn) for fn in iglob(hdf_filename("*"))}
-    jobs = sorted(fn for fn in lmas if fn not in hdfs or hdfs[fn] < lmas[fn])
-
-    for fn in tqdm(jobs):
-        convert(lma_filename(fn), hdf_filename(fn))
+    loaded = (spark.read.format("org.dianahep.sparkroot").load(fn) for fn in targets)
+    df = reduce(DataFrame.union, loaded)
+    restructed = (
+        df
+            .withColumn('hits', combine_hits(chits.getField('fX_mm'),
+                                             chits.getField('fY_mm'),
+                                             chits.getField('fTime'),
+                                             chits.getField('fRekmeth')))
+            .select(col('SortedEvent.fEventID').alias("tag"), 'hits')
+    )
+    tags = restructed.select('tag').toPandas()['tag']
+    meta = spark.createDataFrame(
+        scalars_at(*tags, hightag=hightag, equips=equips)
+            .rename_axis('tag')
+            .reset_index()
+    )
+    merged = restructed.join(meta, restructed['tag'] == meta['tag'], 'inner')
+    (
+        merged
+            .write
+            .option("maxRecordsPerFile", 10000)  # less than 10 MB assuming a record of 1 KB,
+            .parquet(saveas)
+    )
