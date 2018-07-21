@@ -102,7 +102,7 @@ def work(key: str) -> None:
                     )
                 )
                 fn = f.name
-            call(["/bin/bash", fn])
+            call(["qsub", "-Wblock=true", quote(fn)])
     remove(fn)
     remove(locker)
 
