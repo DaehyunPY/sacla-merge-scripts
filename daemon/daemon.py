@@ -104,7 +104,7 @@ def work(key: str) -> None:
                     )
                 )
                 fn = f.name
-            call(["qsub", "-Wblock=true", fn], cwd=expanduser('~')))
+            call(["qsub", "-Wblock=true", fn], cwd=expanduser('~'))
     remove(fn)
     remove(locker)
 
@@ -117,7 +117,7 @@ def run() -> None:
             if islocked(key):
                 print(f"[{datetime.now()}] Job {key} is locked!")
                 continue
-            if active_count() - 1 < maxworkers:
+            if maxworkers <= active_count() - 1:
                 print(f"[{datetime.now()}] Too many workers: {active_count()-1}!")
                 break
             job = Thread(target=work, args=[key])
