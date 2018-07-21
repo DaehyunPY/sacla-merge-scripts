@@ -79,6 +79,7 @@ with builder.getOrCreate() as spark:
         )
         merged = (
             restructed
+                .repartition(8)
                 .join(meta, "tag", 'inner')
                 .join(tma, "tag", 'inner')
         )
