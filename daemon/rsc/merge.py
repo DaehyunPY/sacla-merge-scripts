@@ -17,6 +17,7 @@ args = parser.parse_args()
 rootfiles = args.rootfiles
 saveas = args.output
 
+# %%
 hightag = 201802
 equips = {  # must be correct for metadata retrieval
     'fel_status': ('xfel_mon_bpm_bl3_0_3_beamstatus/summary', bool),
@@ -35,7 +36,7 @@ builder = (SparkSession
            .config("spark.jars.packages", "org.diana-hep:spark-root_2.11:0.1.15")
            # .config("spark.cores.max", 11)
            # .config("spark.executor.cores", 5)
-           .config("spark.executor.memory", "16g")
+           # .config("spark.executor.memory", "16g")
            )
 
 
@@ -81,6 +82,7 @@ with builder.getOrCreate() as spark:
             tma
                 .join(broadcast(meta), "tag", 'inner')
                 .join(broadcast(restructed), "tag", 'inner')
+                .coalesce(1)
         )
         (
             merged
