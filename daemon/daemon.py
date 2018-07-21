@@ -61,14 +61,14 @@ def currentkeys() -> Mapping[str, float]:
 
 
 def todolist() -> Set[str]:
-    print(f"[{datetime.now()}] Scanning parquet files...")
+    print(f"[{datetime.now()}] Scanning root files...")
     lastkeys = currentkeys()
     lastchecked = datetime.now()
     while True:
         if datetime.now() < lastchecked + timedelta(seconds=startinterval):
             sleep(startinterval)
             continue
-        print(f"[{datetime.now()}] Scanning new parquet files...")
+        print(f"[{datetime.now()}] Scanning new root files...")
         curr = currentkeys()
         lastchecked = datetime.now()
         yield sorted(k for k in curr if k in lastkeys and curr[k] <= lastkeys[k])
@@ -94,7 +94,7 @@ def work(key: str) -> None:
             with NamedTemporaryFile('w', delete=False) as f:
                 f.write(dedent("""\
                     #!/bin/bash
-                    pipenv shell {exe} \
+                    {exe} \
                         {targets} \
                         -o {out}
                     """).format(
