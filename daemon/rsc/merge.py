@@ -22,8 +22,8 @@ equips = {  # must be correct for metadata retrieval
     'fel_status': ('xfel_mon_bpm_bl3_0_3_beamstatus/summary', bool),
     'fel_shutter': ('xfel_bl_3_shutter_1_open_valid/status', bool),
     'laser_shutter': ('xfel_bl_3_lh1_shutter_1_open_valid/status', bool),
-    'delay_motor_st4': ('xfel_bl_3_st_4_motor_25/position', float),
-    'delay_motor_st1': ('xfel_bl_3_st_1_motor_73/position', float),
+    'delay_motor_st4': ('xfel_bl_3_st_4_motor_25/position', int),
+    'delay_motor_st1': ('xfel_bl_3_st_1_motor_73/position', int),
 }
 tmafiles = ["/work/uedalab/2018A8038Ueda/tma/*.csv"]
 
