@@ -10,7 +10,7 @@ from typing import List, Set, Mapping
 
 from importlib_resources import path
 from os import remove
-from os.path import basename, exists, getmtime, dirname
+from os.path import basename, exists, getmtime, getctime, dirname
 from tempfile import NamedTemporaryFile
 
 from . import rsc
@@ -56,8 +56,8 @@ def currentkeys() -> Mapping[str, float]:
     Current keys (lma file groups) have to be preanalyzed and their last modifed timestamp.
     Do not return keys which already have been analyzed.
     """
-    return  {k: max(getmtime(f) for f in groupped)
-             for k, groupped in groupby(targetlist(), keypatt) if not exists(workingfile(k))}
+    mtimes = {k: max(getmtime(f) for f in groupped) for k, groupped in groupby(targetlist(), keypatt)}
+    return {k: m for k, m in mtimes.items() if not exists(workingfile(k)) or getctime(workingfile(k)) < m}
 
 
 def todolist() -> Set[str]:

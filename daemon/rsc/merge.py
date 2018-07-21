@@ -73,5 +73,6 @@ with builder.getOrCreate() as spark:
         merged
             .write
             .option("maxRecordsPerFile", 10000)  # less than 10 MB assuming a record of 1 KB,
+            .mode('overwrite')
             .parquet(saveas)
     )
