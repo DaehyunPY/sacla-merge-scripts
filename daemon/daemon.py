@@ -19,7 +19,7 @@ __all__ = ['run']
 
 
 # %% parameters
-maxworkers = 8
+maxworkers = 128
 startinterval = 30
 
 
@@ -92,17 +92,19 @@ def work(key: str) -> None:
             with NamedTemporaryFile('w', delete=False) as f:
                 f.write(dedent("""\
                     #!/bin/bash
+                    #PBS -N job_{key}
                     {exe} \
                         {targets} \
                         -o {out}
                     """).format(
+                        key=key,
                         exe=quote(exe),
                         targets=' '.join(quote(f) for f in targetlist() if keypatt(f)==key),
                         out=quote(out),
                     )
                 )
                 fn = f.name
-            call(["qsub", "-Wblock=true", quote(fn)], cwd=expanduser('~'))
+            call(["qsub", "-Wblock=true", fn], cwd=expanduser('~')))
     remove(fn)
     remove(locker)
 
@@ -116,7 +118,8 @@ def run() -> None:
                 print(f"[{datetime.now()}] Job {key} is locked!")
                 continue
             if active_count() - 1 < maxworkers:
-                print(f"[{datetime.now()}] Too many workers!")
+                print(f"[{datetime.now()}] Too many workers: {active_count()-1}!")
                 break
             job = Thread(target=work, args=[key])
             job.start()
+            print(f"Current number of workders: {active_count()-1}")
