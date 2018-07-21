@@ -1,5 +1,5 @@
 # %% import external dependencies
-from datetime import datetime, timedelta
+from datetime import datetime
 from glob import glob
 from itertools import groupby
 from subprocess import call
@@ -64,16 +64,13 @@ def currentkeys() -> Mapping[str, float]:
 def todolist() -> Set[str]:
     print(f"[{datetime.now()}] Scanning root files...")
     lastkeys = currentkeys()
-    lastchecked = datetime.now()
+    sleep(startinterval)
     while True:
-        if datetime.now() < lastchecked + timedelta(seconds=startinterval):
-            sleep(startinterval)
-            continue
         print(f"[{datetime.now()}] Scanning new root files...")
         curr = currentkeys()
-        lastchecked = datetime.now()
         yield sorted(k for k in curr if k in lastkeys and curr[k] <= lastkeys[k])
         lastkeys = curr
+        sleep(startinterval)
 
 
 def islocked(key: str) -> bool:
@@ -113,6 +110,7 @@ def work(key: str) -> None:
 # %% inf loop
 def run() -> None:
     for jobs in todolist():
+        print(f"[{datetime.now()}] Todo list: {' '.join(jobs)}")
         for key in jobs:
             if not islocked(key) and active_count()-1 < maxworkers:
                 job = Thread(target=work, args=[key])
