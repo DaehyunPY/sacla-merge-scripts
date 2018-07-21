@@ -21,6 +21,7 @@ hightag = 201802
 equips = {  # must be correct for metadata retrieval
     'fel_status': ('xfel_mon_bpm_bl3_0_3_beamstatus/summary', bool),
     'fel_shutter': ('xfel_bl_3_shutter_1_open_valid/status', bool),
+    'fel_intensity': ('xfel_bl_3_tc_bm_2_pd/charge', float),
     'laser_shutter': ('xfel_bl_3_lh1_shutter_1_open_valid/status', bool),
     'delay_motor_st4': ('xfel_bl_3_st_4_motor_25/position', int),
     'delay_motor_st1': ('xfel_bl_3_st_1_motor_73/position', int),
@@ -34,7 +35,7 @@ builder = (SparkSession
            .config("spark.jars.packages", "org.diana-hep:spark-root_2.11:0.1.15")
            # .config("spark.cores.max", 11)
            # .config("spark.executor.cores", 5)
-           # .config("spark.executor.memory", "4g")
+           .config("spark.executor.memory", "16g")
            )
 
 
@@ -84,7 +85,7 @@ with builder.getOrCreate() as spark:
         (
             merged
                 .write
-                .option("maxRecordsPerFile", 100000)  # less than 10 MB assuming a record of 1 KB,
+                # .option("maxRecordsPerFile", 100000)
                 .mode('overwrite')
                 .parquet(saveas)
         )
