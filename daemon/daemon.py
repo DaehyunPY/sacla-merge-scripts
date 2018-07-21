@@ -94,21 +94,17 @@ def work(key: str) -> None:
             with NamedTemporaryFile('w', delete=False) as f:
                 f.write(dedent("""\
                     #!/bin/bash
-                    #PBS -N merge_{key}
-                    #PBS -l nodes=1:ppn=14
-                    #PBS -q serial
                     pipenv shell {exe} \
                         {targets} \
                         -o {out}
                     """).format(
-                        key=key,
                         exe=quote(exe),
                         targets=' '.join(quote(f) for f in targetlist() if keypatt(f)==key),
                         out=quote(out),
                     )
                 )
                 fn = f.name
-            call(["qsub", fn], cwd="/home/daehyun/sacla-merge-scripts")
+            call(["/bin/bash", fn])
     remove(fn)
     remove(locker)
 
