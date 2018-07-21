@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 
 from functools import reduce
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import udf, col
+from pyspark.sql.functions import udf, col, broadcast
 from saclatools import SpkHits, scalars_at
 
 # %% parser & parameters
@@ -78,10 +78,9 @@ with builder.getOrCreate() as spark:
                 .reset_index()
         )
         merged = (
-            restructed
-                .repartition(8)
-                .join(meta, "tag", 'inner')
-                .join(tma, "tag", 'inner')
+            tma
+                .join(broadcast(meta), "tag", 'inner')
+                .join(broadcast(restructed), "tag", 'inner')
         )
         (
             merged
