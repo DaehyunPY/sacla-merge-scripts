@@ -10,7 +10,7 @@ from typing import List, Set, Mapping
 
 from importlib_resources import path
 from os import remove
-from os.path import basename, exists, getmtime, dirname
+from os.path import basename, exists, getmtime, dirname, expanduser
 from tempfile import NamedTemporaryFile
 
 from . import rsc
@@ -102,7 +102,7 @@ def work(key: str) -> None:
                     )
                 )
                 fn = f.name
-            call(["qsub", "-Wblock=true", quote(fn)])
+            call(["qsub", "-Wblock=true", quote(fn)], cwd=expanduser('~'))
     remove(fn)
     remove(locker)
 
