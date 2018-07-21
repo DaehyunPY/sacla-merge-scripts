@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # %% external dependencies
 from argparse import ArgumentParser
+from sys import exit
 
 from functools import reduce
+from os import EX_OK
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import udf, col, broadcast
 from saclatools import SpkHits, scalars_at
@@ -91,3 +93,5 @@ with builder.getOrCreate() as spark:
                 .mode('overwrite')
                 .parquet(saveas)
         )
+
+exit(EX_OK)

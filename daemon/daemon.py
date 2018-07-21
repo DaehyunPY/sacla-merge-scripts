@@ -112,6 +112,11 @@ def run() -> None:
     for jobs in todolist():
         print(f"[{datetime.now()}] Todo list: {' '.join(jobs)}")
         for key in jobs:
-            if not islocked(key) and active_count()-1 < maxworkers:
-                job = Thread(target=work, args=[key])
-                job.start()
+            if islocked(key):
+                print(f"[{datetime.now()}] Job {key} is locked!")
+                continue
+            if active_count() - 1 < maxworkers:
+                print(f"[{datetime.now()}] Too many workers!")
+                break
+            job = Thread(target=work, args=[key])
+            job.start()
