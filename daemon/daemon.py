@@ -104,7 +104,10 @@ def work(key: str) -> None:
                     )
                 )
                 fn = f.name
-            call(["qsub", "-Wblock=true", fn], cwd=expanduser('~'))
+            try:
+                call(["qsub", "-Wblock=true", fn], cwd=expanduser('~'))
+            except KeyboardInterrupt:
+                pass
     remove(fn)
     remove(locker)
 
