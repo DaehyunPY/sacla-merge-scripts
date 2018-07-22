@@ -19,7 +19,7 @@ __all__ = ['run']
 
 
 # %% parameters
-maxworkers = 128
+maxworkers = 8
 startinterval = 30
 
 
