@@ -70,9 +70,12 @@ with builder.getOrCreate() as spark:
             .select(col('tag_number').alias('tag'), col('timing_edge_fitting(pixel)').alias('tma_edge'))
     )
     tags = restructed.select('tag').toPandas()['tag']
-    lasttag, *_ = tma.selectExpr('MAX(tag) AS lasttag').toPandas()['lasttag'].values
+    taglim = tma.selectExpr('MIN(tag) AS first',
+                            'MAX(tag) AS last').toPandas()
 
-    if tags.max() <= lasttag:
+    if (tags.min() < taglim['first'].iloc[0]) or (taglim['last'].iloc[0] < tags.max()):
+        print("Guessing TMA not finished yet")
+    else:
         meta = spark.createDataFrame(
             scalars_at(*tags, hightag=hightag, equips=equips)
                 .rename_axis('tag')
@@ -84,6 +87,7 @@ with builder.getOrCreate() as spark:
                 .join(broadcast(restructed), "tag", 'inner')
                 .coalesce(1)
         )
+        print("Writing...")
         (
             merged
                 .write
@@ -91,3 +95,4 @@ with builder.getOrCreate() as spark:
                 .mode('overwrite')
                 .parquet(saveas)
         )
+        print("Done!")
