@@ -93,6 +93,7 @@ def work(key: str) -> None:
                 f.write(dedent("""\
                     #!/bin/bash
                     #PBS -N job_{key}
+                    #PBS -W block=true 
                     {exe} \
                         {targets} \
                         -o {out}
@@ -104,7 +105,7 @@ def work(key: str) -> None:
                     )
                 )
                 fn = f.name
-            call(["qsub", "-Wblock=true", fn], cwd=expanduser('~'))
+            call(["qsub", fn], cwd=expanduser('~'))
     remove(fn)
     remove(locker)
 
